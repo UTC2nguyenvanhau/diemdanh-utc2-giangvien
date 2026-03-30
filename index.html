@@ -22,12 +22,12 @@
         }
         .admin-card {
             background: var(--card-color); padding: 40px 20px; border-radius: 30px;
-            box-shadow: var(--dark-shadow), var(--light-shadow); width: 100%; max-width: 550px; text-align: center; position: relative;
+            box-shadow: var(--dark-shadow), var(--light-shadow); width: 100%; max-width: 600px; text-align: center; position: relative;
         }
         .theme-switch-wrapper { position: absolute; top: 20px; left: 20px; }
-        .theme-switch { display: inline-block; height: 20px; width: 40px; position: relative; }
+        .theme-switch { display: inline-block; height: 20px; width: 40px; position: relative; cursor: pointer; }
         .theme-switch input { display: none; }
-        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 20px; }
+        .slider { background-color: #ccc; bottom: 0; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 20px; }
         .slider:before { background-color: #fff; bottom: 3px; content: ""; height: 14px; left: 3px; position: absolute; transition: .4s; width: 14px; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent-color); }
         input:checked + .slider:before { transform: translateX(20px); }
@@ -38,24 +38,33 @@
             animation: float 6s ease-in-out infinite;
         }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-        .logo-school { width: 80px; height: auto; }
+        .logo-school { width: 85px; height: auto; }
 
-        h1 { font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 10px 0; }
-        .stat-box { background: var(--bg-color); padding: 20px; border-radius: 20px; margin: 20px 0; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05); }
+        h1 { font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 10px 0; }
+        .stat-box { background: var(--bg-color); padding: 20px; border-radius: 20px; margin: 15px 0; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05); }
         .stat-box span { font-size: 36px; font-weight: 900; color: var(--accent-color); display: block; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        .table-container { width: 100%; overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
         th { text-align: left; color: #8a9ba8; padding: 10px; border-bottom: 2px solid #eee; }
         td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #f5f5f5; }
         
-        .btn-refresh {
+        .btn {
             background: linear-gradient(135deg, #66b3ff, #0073e6); color: white; border: none; padding: 15px;
-            width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px;
+            width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s;
         }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-secondary { background: #cbd4db; color: #5a6673; margin-top: 15px; font-size: 12px; }
 
-        #login-overlay {
+        #login-overlay, #password-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+        #password-modal { background: rgba(0,0,0,0.5); z-index: 1001; display: none; }
+        
+        .input-field {
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; 
+            margin: 10px 0; text-align: center; box-sizing: border-box; outline: none; font-size: 16px;
         }
     </style>
 </head>
@@ -63,10 +72,12 @@
 
 <div id="login-overlay">
     <div class="admin-card">
-        <div class="logo-container"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school"></div>
+        <div class="logo-container">
+            <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school">
+        </div>
         <h1>XÁC THỰC GIẢNG VIÊN</h1>
-        <input type="password" id="pass" placeholder="Mật khẩu " style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin: 20px 0; text-align:center; box-sizing:border-box;">
-        <button class="btn-refresh" onclick="checkLogin()">ĐĂNG NHẬP</button>
+        <input type="password" id="login-pass" class="input-field" placeholder="Nhập mật khẩu quản lý">
+        <button class="btn" onclick="checkLogin()">ĐĂNG NHẬP</button>
     </div>
 </div>
 
@@ -74,7 +85,9 @@
     <div class="theme-switch-wrapper">
         <label class="theme-switch"><input type="checkbox" id="checkbox" onchange="toggleTheme(this)"><div class="slider"></div></label>
     </div>
-    <div class="logo-container"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school"></div>
+    <div class="logo-container">
+        <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school">
+    </div>
     <h1>THỐNG KÊ ĐIỂM DANH</h1>
     <p style="font-size: 11px; color: #8a9ba8; font-weight: bold;">TRƯỜNG ĐH GIAO THÔNG VẬN TẢI - PHÂN HIỆU TP.HCM</p>
 
@@ -83,24 +96,42 @@
         <small style="font-weight:900;">SINH VIÊN ĐÃ CÓ MẶT</small>
     </div>
 
-    <button class="btn-refresh" onclick="refreshData()" id="btnRef">LÀM MỚI DANH SÁCH</button>
+    <button class="btn" onclick="refreshData()" id="btnRef">LÀM MỚI DANH SÁCH</button>
+    <button class="btn btn-secondary" onclick="showPassModal()">THAY ĐỔI MẬT KHẨU</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th>MSSV</th>
-                <th>HỌ VÀ TÊN</th>
-                <th>THỜI GIAN</th>
-            </tr>
-        </thead>
-        <tbody id="attendance-list"></tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>MSSV</th>
+                    <th>HỌ VÀ TÊN</th>
+                    <th>THỜI GIAN</th>
+                </tr>
+            </thead>
+            <tbody id="attendance-list"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="password-modal">
+    <div class="admin-card" style="max-width: 350px;">
+        <h1>ĐỔI MẬT KHẨU</h1>
+        <input type="password" id="old-pass" class="input-field" placeholder="Mật khẩu hiện tại">
+        <input type="password" id="new-pass" class="input-field" placeholder="Mật khẩu mới">
+        <button class="btn" onclick="updatePassword()">LƯU THAY ĐỔI</button>
+        <button class="btn btn-secondary" onclick="closePassModal()">HỦY</button>
+    </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwTSKzMvnMtG4pQDHesK2bFFVE5cHL_Sr12fwcYPNJIFx8Hjci5Ck81rNkYkwj_b5_W/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx1X7D_DTwuJHEetS424Lii2BcvyIZGc1-JZLDQv3NaeOqNYu9x-n0DL_6gbHPn-VMX/exec';
 
-    // Xử lý Theme
+    // Mật khẩu mặc định là 123456
+    function getStoredPass() {
+        return localStorage.getItem('admin_password') || '123456';
+    }
+
+    // Theme Management
     if (localStorage.getItem('admin_theme') === 'dark-mode') {
         document.body.classList.add('dark-mode');
         document.getElementById('checkbox').checked = true;
@@ -111,11 +142,34 @@
     }
 
     function checkLogin() {
-        if(document.getElementById('pass').value === '123456') {
+        if (document.getElementById('login-pass').value === getStoredPass()) {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             refreshData();
-        } else { alert("Sai mật khẩu!"); }
+        } else {
+            alert("Sai mật khẩu!");
+        }
+    }
+
+    function showPassModal() { document.getElementById('password-modal').style.display = 'flex'; }
+    function closePassModal() { document.getElementById('password-modal').style.display = 'none'; }
+
+    function updatePassword() {
+        const oldP = document.getElementById('old-pass').value;
+        const newP = document.getElementById('new-pass').value;
+
+        if (oldP !== getStoredPass()) {
+            alert("Mật khẩu hiện tại không đúng!");
+            return;
+        }
+        if (newP.length < 4) {
+            alert("Mật khẩu mới quá ngắn!");
+            return;
+        }
+
+        localStorage.setItem('admin_password', newP);
+        alert("Đã đổi mật khẩu thành công!");
+        closePassModal();
     }
 
     async function refreshData() {
@@ -127,11 +181,21 @@
             document.getElementById('total-present').innerText = data.total;
             const list = document.getElementById('attendance-list');
             list.innerHTML = "";
+            
             data.list.reverse().forEach(item => {
-                list.innerHTML += `<tr><td>${item.mssv}</td><td style="font-weight:700;">${item.name}</td><td style="color:#8a9ba8;">${item.time}</td></tr>`;
+                list.innerHTML += `
+                    <tr>
+                        <td>${item.mssv}</td>
+                        <td style="font-weight:700;">${item.name}</td>
+                        <td style="color:#8a9ba8;">${item.time}</td>
+                    </tr>`;
             });
-        } catch (e) { alert("Lỗi tải dữ liệu!"); }
-        finally { btn.innerText = "LÀM MỚI DANH SÁCH"; btn.disabled = false; }
+        } catch (e) { 
+            alert("Lỗi tải dữ liệu!"); 
+        } finally { 
+            btn.innerText = "LÀM MỚI DANH SÁCH"; 
+            btn.disabled = false; 
+        }
     }
 </script>
 </body>
