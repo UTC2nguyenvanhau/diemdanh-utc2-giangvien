@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý - UTC2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #eaf1f9; --card: #ffffff; --primary: #003366; --accent: #0073e6;
+            --shadow: 8px 8px 16px rgba(0, 51, 102, 0.1), -8px -8px 16px rgba(255, 255, 255, 0.8);
+        }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--primary); display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0; }
+        .admin-card { background: var(--card); padding: 40px 30px; border-radius: 30px; box-shadow: var(--shadow); width: 100%; max-width: 500px; text-align: center; }
+        .logo-school { width: 80px; margin-bottom: 15px; }
+        h1 { font-size: 20px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+        .stats-container { display: flex; gap: 20px; margin: 25px 0; }
+        .stat-box { background: var(--bg); padding: 20px; border-radius: 20px; flex: 1; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1); }
+        .stat-box span { display: block; font-size: 32px; font-weight: 900; color: var(--accent); }
+        .btn { background: linear-gradient(135deg, #66b3ff, #0073e6); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0, 115, 230, 0.2); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th { text-align: left; color: #8a9ba8; padding: 10px; border-bottom: 2px solid #eee; }
+        td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #f5f5f5; font-weight: 500; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay">
+    <div class="admin-card">
+        <img src="https://utc2.edu.vn/templates/default/images/logo.png" class="logo-school">
+        <h1>XÁC THỰC GIẢNG VIÊN</h1>
+        <input type="password" id="pass" placeholder="Nhập mật khẩu quản lý" style="width:100%; padding:15px; border-radius:12px; border:2px solid #eee; margin: 20px 0; text-align:center; font-size:18px;">
+        <button class="btn" onclick="checkPass()">VÀO HỆ THỐNG</button>
+    </div>
+</div>
+
+<div class="admin-card" id="dashboard" style="display:none;">
+    <img src="https://utc2.edu.vn/templates/default/images/logo.png" class="logo-school">
+    <h1>THỐNG KÊ ĐIỂM DANH</h1>
+    <p style="font-size: 12px; color: #8a9ba8; font-weight: bold;">PHÂN HIỆU ĐẠI HỌC GTVT TẠI TP.HCM</p>
+    
+    <div class="stats-container">
+        <div class="stat-box">
+            <span id="total-present">0</span>
+            <small style="font-weight: bold;">SINH VIÊN CÓ MẶT</small>
+        </div>
+    </div>
+
+    <button class="btn" onclick="refreshData()" id="refreshBtn">LÀM MỚI DANH SÁCH</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>MSSV</th>
+                <th>THỜI GIAN QUÉT</th>
+            </tr>
+        </thead>
+        <tbody id="attendance-list">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzl5WkxzuYuyX89CEWuvIC5ygSwdII4BVyCap62DXVqMNJrM2GH5BWivkkULFnezShy/exec';
+
+    function checkPass() {
+        if(document.getElementById('pass').value === '123456') { // Mật khẩu giảng viên
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            refreshData();
+        } else { alert("Mật khẩu không chính xác!"); }
+    }
+
+    async function refreshData() {
+        const btn = document.getElementById('refreshBtn');
+        const total = document.getElementById('total-present');
+        const list = document.getElementById('attendance-list');
+        
+        btn.innerText = "🔄 ĐANG TẢI...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(scriptURL + "?action=getStats");
+            const data = await response.json();
+            
+            total.innerText = data.total;
+            list.innerHTML = "";
+            
+            data.list.reverse().forEach(item => {
+                list.innerHTML += `<tr><td>${item.mssv}</td><td>${item.time}</td></tr>`;
+            });
+        } catch (error) {
+            alert("Lỗi kết nối dữ liệu Cloud!");
+        } finally {
+            btn.innerText = "LÀM MỚI DANH SÁCH";
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
