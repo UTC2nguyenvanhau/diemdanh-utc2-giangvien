@@ -8,6 +8,7 @@
     <style>
         :root {
             --bg-color: #eaf1f9; --card-color: #ffffff; --primary-color: #003366; --accent-color: #4da6ff;
+            --success-color: #27ae60;
             --light-shadow: -8px -8px 16px rgba(255, 255, 255, 0.8);
             --dark-shadow: 8px 8px 16px rgba(0, 51, 102, 0.1);
         }
@@ -49,12 +50,18 @@
         th { text-align: left; color: #8a9ba8; padding: 10px; border-bottom: 2px solid #eee; }
         td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #f5f5f5; }
         
+        .button-group {
+            display: flex; gap: 10px; margin-top: 10px; justify-content: center;
+        }
+        
         .btn {
             background: linear-gradient(135deg, #66b3ff, #0073e6); color: white; border: none; padding: 15px;
-            width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s;
+            width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
+        .btn-excel { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .btn:active { transform: scale(0.98); opacity: 0.9; }
-        .btn-secondary { background: #cbd4db; color: #5a6673; margin-top: 15px; font-size: 12px; }
+        .btn-secondary { background: #cbd4db; color: #5a6673; margin-top: 15px; font-size: 12px; width: auto; padding: 10px 20px; }
 
         #login-overlay, #password-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color);
@@ -72,6 +79,13 @@
 
 <div id="login-overlay">
     <div class="admin-card">
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch">
+                <input type="checkbox" id="checkbox-login" onchange="toggleTheme(this)">
+                <div class="slider"></div>
+            </label>
+        </div>
+
         <div class="logo-container">
             <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school">
         </div>
@@ -83,8 +97,12 @@
 
 <div class="admin-card" id="dashboard" style="display:none;">
     <div class="theme-switch-wrapper">
-        <label class="theme-switch"><input type="checkbox" id="checkbox" onchange="toggleTheme(this)"><div class="slider"></div></label>
+        <label class="theme-switch">
+            <input type="checkbox" id="checkbox-dash" onchange="toggleTheme(this)">
+            <div class="slider"></div>
+        </label>
     </div>
+    
     <div class="logo-container">
         <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school">
     </div>
@@ -96,8 +114,12 @@
         <small style="font-weight:900;">SINH VIÊN ĐÃ CÓ MẶT</small>
     </div>
 
-    <button class="btn" onclick="refreshData()" id="btnRef">LÀM MỚI DANH SÁCH</button>
-    <button class="btn btn-secondary" onclick="showPassModal()">THAY ĐỔI MẬT KHẨU</button>
+    <div class="button-group">
+        <button class="btn" onclick="refreshData()" id="btnRef">🔄 LÀM MỚI</button>
+        <button class="btn btn-excel" onclick="exportToExcel()">📥 XUẤT EXCEL</button>
+    </div>
+    
+    <button class="btn btn-secondary" onclick="showPassModal()">⚙️ THAY ĐỔI MẬT KHẨU</button>
 
     <div class="table-container">
         <table>
@@ -125,30 +147,43 @@
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCByqoQ70J0732L9TkhIN0LeGxQcg2RMiLj3cIQ-D74qhI6BappOCU8tSenX-O7RfE/exec';
+    
+    // Biến toàn cục để lưu trữ dữ liệu hiện tại (Dùng cho việc xuất Excel)
+    let currentDataList = [];
 
-    // Mật khẩu mặc định là 123456
-    function getStoredPass() {
-        return localStorage.getItem('admin_password') || '123456';
+    function getStoredPass() { return localStorage.getItem('admin_password') || '123456'; }
+
+    function initTheme() {
+        const isDark = localStorage.getItem('admin_theme') === 'dark-mode';
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('checkbox-login').checked = true;
+            document.getElementById('checkbox-dash').checked = true;
+        }
+    }
+    initTheme();
+
+    function toggleTheme(element) {
+        const isChecked = element.checked;
+        document.body.classList.toggle('dark-mode', isChecked);
+        localStorage.setItem('admin_theme', isChecked ? 'dark-mode' : 'light-mode');
+        document.getElementById('checkbox-login').checked = isChecked;
+        document.getElementById('checkbox-dash').checked = isChecked;
     }
 
-    // Theme Management
-    if (localStorage.getItem('admin_theme') === 'dark-mode') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('checkbox').checked = true;
-    }
-    function toggleTheme(e) {
-        document.body.classList.toggle('dark-mode', e.checked);
-        localStorage.setItem('admin_theme', e.checked ? 'dark-mode' : 'light-mode');
-    }
+    document.getElementById("login-pass").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") { event.preventDefault(); checkLogin(); }
+    });
+    document.getElementById("new-pass").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") { event.preventDefault(); updatePassword(); }
+    });
 
     function checkLogin() {
         if (document.getElementById('login-pass').value === getStoredPass()) {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             refreshData();
-        } else {
-            alert("Sai mật khẩu!");
-        }
+        } else { alert("Sai mật khẩu!"); }
     }
 
     function showPassModal() { document.getElementById('password-modal').style.display = 'flex'; }
@@ -157,32 +192,30 @@
     function updatePassword() {
         const oldP = document.getElementById('old-pass').value;
         const newP = document.getElementById('new-pass').value;
-
-        if (oldP !== getStoredPass()) {
-            alert("Mật khẩu hiện tại không đúng!");
-            return;
-        }
-        if (newP.length < 4) {
-            alert("Mật khẩu mới quá ngắn!");
-            return;
-        }
-
+        if (oldP !== getStoredPass()) { alert("Mật khẩu hiện tại không đúng!"); return; }
+        if (newP.length < 4) { alert("Mật khẩu mới quá ngắn!"); return; }
         localStorage.setItem('admin_password', newP);
         alert("Đã đổi mật khẩu thành công!");
+        document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = '';
         closePassModal();
     }
 
     async function refreshData() {
         const btn = document.getElementById('btnRef');
-        btn.innerText = "🔄 ĐANG TẢI..."; btn.disabled = true;
+        btn.innerHTML = "🔄 ĐANG TẢI..."; btn.disabled = true;
         try {
             const res = await fetch(scriptURL + "?action=getStats");
             const data = await res.json();
+            
             document.getElementById('total-present').innerText = data.total;
+            
+            // Lưu lại data để xuất Excel
+            currentDataList = data.list.reverse(); 
+            
             const list = document.getElementById('attendance-list');
             list.innerHTML = "";
             
-            data.list.reverse().forEach(item => {
+            currentDataList.forEach(item => {
                 list.innerHTML += `
                     <tr>
                         <td>${item.mssv}</td>
@@ -193,9 +226,42 @@
         } catch (e) { 
             alert("Lỗi tải dữ liệu!"); 
         } finally { 
-            btn.innerText = "LÀM MỚI DANH SÁCH"; 
+            btn.innerHTML = "🔄 LÀM MỚI"; 
             btn.disabled = false; 
         }
+    }
+
+    // HÀM XUẤT FILE EXCEL (CSV)
+    function exportToExcel() {
+        if (currentDataList.length === 0) {
+            alert("Chưa có dữ liệu sinh viên nào để xuất!");
+            return;
+        }
+
+        // 1. Tạo tiêu đề cột
+        let csvContent = "MSSV,HỌ VÀ TÊN,THỜI GIAN ĐIỂM DANH\n";
+
+        // 2. Chèn dữ liệu từng dòng
+        currentDataList.forEach(item => {
+            // Bao bọc chuỗi trong dấu nháy kép ("") để Excel không bị lỗi nếu tên sinh viên có dấu phẩy
+            csvContent += `"${item.mssv}","${item.name}","${item.time}"\n`;
+        });
+
+        // 3. Đóng gói dữ liệu kèm theo mã UTF-8 BOM (\uFEFF) để Excel đọc được tiếng Việt có dấu
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        // 4. Tạo thẻ <a> ảo để kích hoạt tải xuống
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        
+        // Tên file tải về (có ghép thêm ngày giờ hiện tại cho chuyên nghiệp)
+        const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+        link.setAttribute("download", `DiemDanh_UTC2_${dateStr}.csv`);
+        
+        document.body.appendChild(link);
+        link.click(); // Tự động click tải
+        document.body.removeChild(link); // Xóa thẻ ảo sau khi tải xong
     }
 </script>
 </body>
