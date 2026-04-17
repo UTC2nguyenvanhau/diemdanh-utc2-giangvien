@@ -196,21 +196,33 @@ function exportToExcel() {
 
     const classId = document.getElementById('class-select').value || "Chung";
     const dateStrFilter = document.getElementById('date-select').value.replace("Ngày ", "").replace(/\//g, '-') || "All";
-    
-    let csvContent = "MSSV,HỌ VÀ TÊN,THỜI GIAN ĐIỂM DANH\n";
 
+    // 1. Chuẩn bị dữ liệu: Thêm hàng tiêu đề vào đầu mảng
+    const dataForExcel = [
+        ["MÃ SỐ SINH VIÊN", "HỌ VÀ TÊN", "THỜI GIAN ĐIỂM DANH"] // Tiêu đề cột
+    ];
+
+    // 2. Đẩy dữ liệu từ danh sách hiện tại vào mảng
     currentDataList.forEach(item => {
-        csvContent += `"${item.mssv}","${item.name}","${item.time}"\n`;
+        dataForExcel.push([item.mssv, item.name, item.time]);
     });
 
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `DiemDanh_${classId}_${dateStrFilter}.csv`);
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 3. Khởi tạo Workbook và Worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(dataForExcel);
+
+    // 4. Cấu hình độ rộng cột (Cột A: 20, Cột B: 30, Cột C: 25)
+    const wscols = [
+        {wch: 20}, // MSSV
+        {wch: 35}, // Họ và Tên
+        {wch: 25}  // Thời gian
+    ];
+    ws['!cols'] = wscols;
+
+    // 5. Thêm Sheet vào file
+    XLSX.utils.book_append_sheet(wb, ws, "Danh Sách Điểm Danh");
+
+    // 6. Xuất file và tải xuống
+    const fileName = `DiemDanh_${classId}_${dateStrFilter}.xlsx`;
+    XLSX.writeFile(wb, fileName);
 }
