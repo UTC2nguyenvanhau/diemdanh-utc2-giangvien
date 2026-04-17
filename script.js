@@ -1,5 +1,5 @@
-// THAY BẰNG LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjZjDJYbvjShm_j1sru4mvamds-LzHpiKx308ZWqdrXES5DRsdHk4hV3NhdEuv331/exec';
+// Thay Link Apps Script của bạn vào đây
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjZjDJYbvjShm_j1sru4mvamds-LzHpiKx308ZWqdrXES5DRsdHk4hV3NhdEuv331/exec'; 
 let currentDataList = [];
 
 function getStoredPass() { return localStorage.getItem('admin_password') || '123456'; }
@@ -22,6 +22,7 @@ function toggleTheme(element) {
     document.getElementById('checkbox-dash').checked = isChecked;
 }
 
+// Bắt sự kiện phím Enter
 document.getElementById("login-pass").addEventListener("keypress", function(event) {
     if (event.key === "Enter") { event.preventDefault(); checkLogin(); }
 });
@@ -36,7 +37,7 @@ function checkLogin() {
     if (document.getElementById('login-pass').value === getStoredPass()) {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        loadClasses(); // Tải danh sách lớp ngay khi đăng nhập xong
+        loadClasses(); 
     } else { alert("Sai mật khẩu!"); }
 }
 
@@ -60,29 +61,6 @@ function showSearchModal() {
     document.getElementById('search-mssv').value = '';
 }
 function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; }
-
-// --- HÀM MỚI: TẢI DANH SÁCH LỚP ---
-async function loadClasses() {
-    const select = document.getElementById('class-select');
-    try {
-        const res = await fetch(`${scriptURL}?action=getClasses`);
-        const data = await res.json();
-        
-        if (data.success && data.classes.length > 0) {
-            select.innerHTML = '<option value="">-- Chọn lớp học phần để xem --</option>';
-            data.classes.forEach(cls => {
-                let opt = document.createElement('option');
-                opt.value = cls;
-                opt.innerHTML = "📚 Lớp: " + cls;
-                select.appendChild(opt);
-            });
-        } else {
-            select.innerHTML = '<option value="">Không có lớp nào đang mở</option>';
-        }
-    } catch (e) {
-        select.innerHTML = '<option value="">Lỗi tải danh sách lớp</option>';
-    }
-}
 
 async function searchStudent() {
     const mssv = document.getElementById('search-mssv').value.trim();
@@ -111,35 +89,97 @@ async function searchStudent() {
     }
 }
 
-// --- ĐÃ SỬA: LẤY DỮ LIỆU THEO LỚP ĐƯỢC CHỌN ---
+// --- TẢI DANH SÁCH LỚP ---
+async function loadClasses() {
+    const select = document.getElementById('class-select');
+    try {
+        const res = await fetch(`${scriptURL}?action=getClasses`);
+        const data = await res.json();
+        
+        if (data.success && data.classes.length > 0) {
+            select.innerHTML = '<option value="">-- Chọn lớp học --</option>';
+            data.classes.forEach(cls => {
+                let opt = document.createElement('option');
+                opt.value = cls;
+                opt.innerHTML = "📚 " + cls;
+                select.appendChild(opt);
+            });
+        }
+    } catch (e) { select.innerHTML = '<option value="">Lỗi tải lớp</option>'; }
+}
+
+// --- TẢI DANH SÁCH NGÀY THEO LỚP ---
+async function handleClassChange() {
+    const classId = document.getElementById('class-select').value;
+    const dateSelect = document.getElementById('date-select');
+    
+    if (!classId) {
+        dateSelect.innerHTML = '<option value="">-- Ngày --</option>';
+        document.getElementById('attendance-list').innerHTML = "";
+        document.getElementById('total-present').innerText = "0";
+        return;
+    }
+
+    dateSelect.innerHTML = '<option value="">Đang tải...</option>';
+    try {
+        const res = await fetch(`${scriptURL}?action=getDates&classId=${encodeURIComponent(classId)}`);
+        const data = await res.json();
+        
+        if (data.success && data.dates.length > 0) {
+            dateSelect.innerHTML = '';
+            data.dates.forEach(date => {
+                let opt = document.createElement('option');
+                opt.value = date;
+                opt.innerHTML = "Ngày " + date;
+                dateSelect.appendChild(opt);
+            });
+            
+            // Chọn ngày mới nhất và hiển thị dữ liệu
+            dateSelect.selectedIndex = data.dates.length - 1;
+            refreshData();
+        } else {
+            dateSelect.innerHTML = '<option value="">Chưa có dữ liệu</option>';
+            refreshData(); 
+        }
+    } catch (e) { dateSelect.innerHTML = '<option value="">Lỗi</option>'; }
+}
+
+// --- TẢI DỮ LIỆU ĐIỂM DANH ---
 async function refreshData() {
     const classId = document.getElementById('class-select').value;
+    const targetDate = document.getElementById('date-select').value;
     
-    // Nếu chưa chọn lớp thì không làm gì cả
-    if (!classId) return; 
+    if (!classId) return;
 
     const btn = document.getElementById('btnRef');
     btn.innerHTML = "🔄 ĐANG TẢI..."; btn.disabled = true;
     try {
-        // Gửi classId thực tế lên Google Apps Script
-        const res = await fetch(`${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}`);
+        let url = `${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}`;
+        if (targetDate && targetDate !== "") {
+            url += `&date=${encodeURIComponent(targetDate.replace("Ngày ", ""))}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
         
         document.getElementById('total-present').innerText = data.total || 0;
-        
         currentDataList = (data.list || []).reverse(); 
         
         const list = document.getElementById('attendance-list');
         list.innerHTML = "";
         
-        currentDataList.forEach(item => {
-            list.innerHTML += `
-                <tr>
-                    <td>${item.mssv}</td>
-                    <td style="font-weight:700;">${item.name}</td>
-                    <td style="color:var(--text-gray);">${item.time}</td>
-                </tr>`;
-        });
+        if(currentDataList.length === 0) {
+            list.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-gray); padding: 20px;">Chưa có sinh viên điểm danh ngày này</td></tr>`;
+        } else {
+            currentDataList.forEach(item => {
+                list.innerHTML += `
+                    <tr>
+                        <td>${item.mssv}</td>
+                        <td style="font-weight:700;">${item.name}</td>
+                        <td style="color:var(--text-gray);">${item.time}</td>
+                    </tr>`;
+            });
+        }
     } catch (e) { 
         alert("Lỗi tải dữ liệu!"); 
     } finally { 
@@ -155,6 +195,8 @@ function exportToExcel() {
     }
 
     const classId = document.getElementById('class-select').value || "Chung";
+    const dateStrFilter = document.getElementById('date-select').value.replace("Ngày ", "").replace(/\//g, '-') || "All";
+    
     let csvContent = "MSSV,HỌ VÀ TÊN,THỜI GIAN ĐIỂM DANH\n";
 
     currentDataList.forEach(item => {
@@ -166,9 +208,7 @@ function exportToExcel() {
     
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    
-    const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
-    link.setAttribute("download", `DiemDanh_${classId}_${dateStr}.csv`); // Tên file có kèm tên lớp
+    link.setAttribute("download", `DiemDanh_${classId}_${dateStrFilter}.csv`);
     
     document.body.appendChild(link);
     link.click();
