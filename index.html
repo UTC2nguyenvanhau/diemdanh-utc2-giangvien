@@ -22,6 +22,8 @@
             <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/03/Logo-Dai-Hoc-Giao-Thong-Van-Tai-UTC.png" class="logo-school">
         </div>
         <h1>XÁC THỰC GIẢNG VIÊN</h1>
+        <p class="subtitle">Bảo mật ESP32 Cloud System</p>
+        
         <input type="password" id="login-pass" class="input-field" placeholder="Nhập mật khẩu quản lý">
         <button class="btn" onclick="checkLogin()">ĐĂNG NHẬP</button>
     </div>
@@ -53,7 +55,7 @@
     
     <div class="button-group">
         <button class="btn btn-secondary" onclick="showSearchModal()">🔍 TRA CỨU SINH VIÊN</button>
-        <button class="btn btn-secondary" onclick="showPassModal()">⚙️ ĐỔI MẬT KHẨU ADMIN</button>
+        <button class="btn btn-secondary" onclick="showPassModal()">⚙️ ĐỔI MẬT KHẨU</button>
     </div>
 
     <div class="table-container">
@@ -73,26 +75,31 @@
 <div id="password-modal" class="modal-overlay">
     <div class="admin-card modal-card">
         <h1>ĐỔI MẬT KHẨU ADMIN</h1>
+        <p class="subtitle">Vui lòng nhập mật khẩu hiện tại để xác thực</p>
+        
         <input type="password" id="old-pass" class="input-field" placeholder="Mật khẩu hiện tại">
         <input type="password" id="new-pass" class="input-field" placeholder="Mật khẩu mới">
+        
         <button class="btn" onclick="updatePassword()">LƯU THAY ĐỔI</button>
-        <button class="btn btn-secondary" onclick="closePassModal()">HỦY</button>
+        <button class="btn btn-secondary" style="margin-top: 15px;" onclick="closePassModal()">HỦY</button>
     </div>
 </div>
 
 <div id="search-modal" class="modal-overlay">
     <div class="admin-card modal-card">
         <h1>TRA CỨU TÀI KHOẢN</h1>
+        <p class="subtitle">Hỗ trợ cấp lại mật khẩu cho sinh viên</p>
+        
         <input type="number" id="search-mssv" class="input-field" placeholder="Nhập MSSV cần tìm">
         <button class="btn" onclick="searchStudent()" id="btnSearch">TÌM KIẾM</button>
         
-        <div id="search-result" style="display: none; margin-top: 15px; text-align: left; padding: 15px; background: var(--bg-color); border-radius: 12px;">
+        <div id="search-result" class="search-result-box" style="display: none;">
             <p>MSSV: <b id="res-mssv" style="color: var(--accent-color);"></b></p>
             <p>Họ tên: <b id="res-name" style="color: var(--primary-color);"></b></p>
             <p>Mật khẩu: <b id="res-pass" style="color: var(--error);"></b></p>
         </div>
 
-        <button class="btn btn-secondary" onclick="closeSearchModal()">ĐÓNG</button>
+        <button class="btn btn-secondary" style="margin-top: 15px;" onclick="closeSearchModal()">ĐÓNG</button>
     </div>
 </div>
 
