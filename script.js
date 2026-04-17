@@ -1,5 +1,5 @@
 // Thay Link Apps Script của bạn vào đây
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjZjDJYbvjShm_j1sru4mvamds-LzHpiKx308ZWqdrXES5DRsdHk4hV3NhdEuv331/exec'; 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbynGQ30GcS9Ww72xEDoIIZVhVEX_5eiGj0WgwxY9cd1PGoSg8m0wW36IQK9IRfUecbj/exec'; 
 let currentDataList = [];
 
 function getStoredPass() { return localStorage.getItem('admin_password') || '123456'; }
