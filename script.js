@@ -1,3 +1,4 @@
+// THAY BẰNG LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY
 const scriptURL = 'https://script.google.com/macros/s/AKfycbxkvEA_6lF7IEOq1eoc8k3kv5iVA95p-AWSuGwngg5GqhtlTqMuYjtlLGrCny227ern/exec';
 let currentDataList = [];
 
@@ -35,7 +36,7 @@ function checkLogin() {
     if (document.getElementById('login-pass').value === getStoredPass()) {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        refreshData(); // Lệnh này chạy cần có classId, tạm thời mình giả định bạn đã hardcode hoặc sẽ ghép dropdown vào sau
+        refreshData(); 
     } else { alert("Sai mật khẩu!"); }
 }
 
@@ -91,9 +92,9 @@ async function refreshData() {
     const btn = document.getElementById('btnRef');
     btn.innerHTML = "🔄 ĐANG TẢI..."; btn.disabled = true;
     try {
-        // Lưu ý: Nếu bạn dùng hệ thống nhiều lớp, nhớ truyền thêm classId vào link này
-        // Ví dụ: const res = await fetch(scriptURL + "?action=getStats&classId=Ten_Lop");
-        const res = await fetch(scriptURL + "?action=getStats");
+        // TẠM THỜI GIẢ ĐỊNH BẠN ĐANG ĐIỂM DANH LỚP CÓ TÊN SHEET LÀ Danh_Sach_Lop
+        // Nếu có menu chọn lớp, cần gửi thêm biến classId vào đây nhé
+        const res = await fetch(scriptURL + "?action=getStats&classId=Danh_Sach_Lop");
         const data = await res.json();
         
         document.getElementById('total-present').innerText = data.total || 0;
@@ -108,7 +109,7 @@ async function refreshData() {
                 <tr>
                     <td>${item.mssv}</td>
                     <td style="font-weight:700;">${item.name}</td>
-                    <td style="color:#8a9ba8;">${item.time}</td>
+                    <td style="color:var(--text-gray);">${item.time}</td>
                 </tr>`;
         });
     } catch (e) { 
