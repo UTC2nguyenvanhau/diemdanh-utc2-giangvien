@@ -1,24 +1,11 @@
 /* Ép toàn bộ trang web dùng chung một font chữ đồng bộ */
-* {
-    font-family: 'Roboto', sans-serif !important;
-}
+* { font-family: 'Roboto', sans-serif !important; }
+button, input, select, textarea { font-family: inherit; }
 
-button, input, select, textarea {
-    font-family: inherit;
-}
-/* --- BIẾN TOÀN CỤC (ĐỒNG BỘ VỚI WEB SINH VIÊN) --- */
 :root {
-    --bg-color: #eaf1f9;
-    --card-color: #ffffff;
-    --primary-color: #003366;
-    --accent-color: #4da6ff;
-    --success-color: #27ae60;
-    --error: #e74c3c;
-    --golden: #f1c40f;
-    --input-bg: #f4f8fd;
-    --input-border: #e0e9f5;
-    --text-gray: #8a9ba8;
-    
+    --bg-color: #eaf1f9; --card-color: #ffffff; --primary-color: #003366; 
+    --accent-color: #4da6ff; --success-color: #27ae60; --error: #e74c3c; 
+    --golden: #f1c40f; --input-bg: #f4f8fd; --input-border: #e0e9f5; --text-gray: #8a9ba8;
     --light-shadow: -8px -8px 16px rgba(255, 255, 255, 0.8);
     --dark-shadow: 8px 8px 16px rgba(0, 51, 102, 0.1);
     --inset-light: inset -4px -4px 8px rgba(255, 255, 255, 1);
@@ -26,13 +13,8 @@ button, input, select, textarea {
 }
 
 body.dark-mode {
-    --bg-color: #1a1e24;
-    --card-color: #1a1e24;
-    --primary-color: #e0e9f5; 
-    --accent-color: #66b3ff;
-    --input-bg: #14171c; 
-    --input-border: #232830;
-    
+    --bg-color: #1a1e24; --card-color: #1a1e24; --primary-color: #e0e9f5; 
+    --accent-color: #66b3ff; --input-bg: #14171c; --input-border: #232830;
     --light-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03); 
     --dark-shadow: 8px 8px 16px rgba(0, 0, 0, 0.4); 
     --inset-light: inset -4px -4px 8px rgba(255, 255, 255, 0.02);
@@ -40,15 +22,12 @@ body.dark-mode {
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--primary-color);
+    background-color: var(--bg-color); color: var(--primary-color);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     min-height: 100vh; margin: 0; padding: 40px 20px; box-sizing: border-box;
     transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* KHUNG CARD CHÍNH 3D */
 .admin-card {
     background: var(--card-color); padding: 40px 30px; border-radius: 30px;
     box-shadow: var(--dark-shadow), var(--light-shadow); width: 100%; max-width: 600px;
@@ -56,7 +35,6 @@ body {
 }
 .modal-card { max-width: 400px; }
 
-/* CÔNG TẮC GIAO DIỆN */
 .theme-switch-wrapper { position: absolute; top: 20px; left: 20px; }
 .theme-switch { display: inline-block; height: 24px; position: relative; width: 46px; }
 .theme-switch input { display: none; }
@@ -65,7 +43,6 @@ body {
 input:checked + .slider { background-color: var(--accent-color); }
 input:checked + .slider:before { transform: translateX(22px); }
 
-/* LOGO NỔI */
 .logo-container {
     width: 120px; height: 120px; margin: 0 auto 20px auto; border-radius: 50%; background: var(--card-color);
     box-shadow: var(--dark-shadow), var(--light-shadow); display: flex; align-items: center; justify-content: center;
@@ -74,11 +51,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 @keyframes float-light { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px) rotate(3deg); } 100% { transform: translateY(0px); } }
 .logo-school { width: 90px; height: auto; }
 
-/* TEXT */
 h1 { font-size: 20px; font-weight: 900; margin: 10px 0; color: var(--primary-color); }
-.subtitle { font-size: 12px; color: var(--text-gray); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 25px; }
+.subtitle { font-size: 12px; color: var(--text-gray); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 25px; text-transform: uppercase;}
 
-/* Ô THỐNG KÊ (Khắc chìm) */
 .stat-box { 
     background: var(--input-bg); padding: 25px 20px; border-radius: 25px; margin: 20px 0; 
     box-shadow: var(--inset-dark), var(--inset-light); transition: all 0.4s ease;
@@ -86,7 +61,6 @@ h1 { font-size: 20px; font-weight: 900; margin: 10px 0; color: var(--primary-col
 .stat-box span { font-size: 42px; font-weight: 900; color: var(--accent-color); display: block; margin-bottom: 5px; }
 .stat-label { font-weight: 800; font-size: 13px; color: var(--text-gray); letter-spacing: 1px; }
 
-/* BẢNG DỮ LIỆU (Khắc chìm) */
 .table-container { 
     width: 100%; overflow-x: auto; margin-top: 25px; background: var(--input-bg); 
     border-radius: 20px; padding: 15px; box-shadow: var(--inset-dark), var(--inset-light);
@@ -95,12 +69,11 @@ h1 { font-size: 20px; font-weight: 900; margin: 10px 0; color: var(--primary-col
 table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 450px; }
 th { text-align: left; color: var(--text-gray); padding: 12px 10px; border-bottom: 2px solid var(--input-border); font-weight: 800; position: sticky; top: 0; background: var(--input-bg); }
 td { text-align: left; padding: 15px 10px; border-bottom: 1px solid var(--input-border); color: var(--primary-color); font-weight: 500; }
-td:nth-child(2) { font-weight: 700; } /* In đậm tên SV */
+td:nth-child(2) { font-weight: 700; } 
 
-/* NÚT BẤM (Nổi 3D) */
 .button-group { display: flex; gap: 15px; margin-top: 15px; justify-content: center; }
 .btn {
-    -webkit-appearance: none;
+    -webkit-appearance: none; appearance: none;
     background: linear-gradient(135deg, #66b3ff 0%, #0073e6 100%); color: white; border: none; padding: 15px;
     width: 100%; border-radius: 15px; font-weight: 900; font-size: 14px; cursor: pointer; transition: all 0.3s ease;
     box-shadow: 5px 5px 12px rgba(0, 115, 230, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -110,16 +83,14 @@ td:nth-child(2) { font-weight: 700; } /* In đậm tên SV */
 .btn-secondary { background: transparent; color: var(--text-gray); border: 2px dashed var(--text-gray); box-shadow: none; }
 .btn-secondary:hover { border-color: var(--accent-color); color: var(--accent-color); }
 
-/* POPUP (MODAL) VỚI NỀN LÀM MỜ BLUR */
 #login-overlay, .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color);
     display: flex; align-items: center; justify-content: center; z-index: 1000;
 }
-.modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); z-index: 1001; display: none; }
+.modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1001; display: none; }
 
-/* Ô NHẬP LIỆU (Khắc chìm) */
 .input-field {
-    -webkit-appearance: none; appearance: none; font-family: inherit;
+    -webkit-appearance: none; appearance: none;
     width: 100%; height: 55px; background: var(--input-bg); border: none; 
     border-radius: 15px; font-size: 16px; font-weight: 700; color: var(--primary-color); 
     text-align: center; box-sizing: border-box; box-shadow: var(--inset-dark), var(--inset-light); 
@@ -128,8 +99,8 @@ td:nth-child(2) { font-weight: 700; } /* In đậm tên SV */
 .input-field:focus { box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.5); border: 2px solid var(--accent-color); }
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
+select.input-field { font-size: 14px; padding: 0 10px; }
 
-/* KẾT QUẢ TÌM KIẾM */
 .search-result-box {
     background: var(--input-bg); padding: 15px 20px; border-radius: 15px; margin-top: 15px; margin-bottom: 15px;
     box-shadow: var(--inset-dark), var(--inset-light); text-align: left;
