@@ -1,5 +1,5 @@
 // THAY BẰNG LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxkvEA_6lF7IEOq1eoc8k3kv5iVA95p-AWSuGwngg5GqhtlTqMuYjtlLGrCny227ern/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxC3a1MrfkGTYcCQ8U-uxx74JiivRuLeQgAamZd6264tfd2VnOk9csnJt0rJVG7_z1V/exec';
 let currentDataList = [];
 
 function getStoredPass() { return localStorage.getItem('admin_password') || '123456'; }
