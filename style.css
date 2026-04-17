@@ -1,3 +1,11 @@
+/* Ép toàn bộ trang web dùng chung một font chữ đồng bộ */
+* {
+    font-family: 'Roboto', sans-serif !important;
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+}
 /* --- BIẾN TOÀN CỤC (ĐỒNG BỘ VỚI WEB SINH VIÊN) --- */
 :root {
     --bg-color: #eaf1f9;
