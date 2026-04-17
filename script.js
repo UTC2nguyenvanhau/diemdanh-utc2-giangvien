@@ -36,7 +36,7 @@ function checkLogin() {
     if (document.getElementById('login-pass').value === getStoredPass()) {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        refreshData(); 
+        loadClasses(); // Tải danh sách lớp ngay khi đăng nhập xong
     } else { alert("Sai mật khẩu!"); }
 }
 
@@ -60,6 +60,29 @@ function showSearchModal() {
     document.getElementById('search-mssv').value = '';
 }
 function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; }
+
+// --- HÀM MỚI: TẢI DANH SÁCH LỚP ---
+async function loadClasses() {
+    const select = document.getElementById('class-select');
+    try {
+        const res = await fetch(`${scriptURL}?action=getClasses`);
+        const data = await res.json();
+        
+        if (data.success && data.classes.length > 0) {
+            select.innerHTML = '<option value="">-- Chọn lớp học phần để xem --</option>';
+            data.classes.forEach(cls => {
+                let opt = document.createElement('option');
+                opt.value = cls;
+                opt.innerHTML = "📚 Lớp: " + cls;
+                select.appendChild(opt);
+            });
+        } else {
+            select.innerHTML = '<option value="">Không có lớp nào đang mở</option>';
+        }
+    } catch (e) {
+        select.innerHTML = '<option value="">Lỗi tải danh sách lớp</option>';
+    }
+}
 
 async function searchStudent() {
     const mssv = document.getElementById('search-mssv').value.trim();
@@ -88,13 +111,18 @@ async function searchStudent() {
     }
 }
 
+// --- ĐÃ SỬA: LẤY DỮ LIỆU THEO LỚP ĐƯỢC CHỌN ---
 async function refreshData() {
+    const classId = document.getElementById('class-select').value;
+    
+    // Nếu chưa chọn lớp thì không làm gì cả
+    if (!classId) return; 
+
     const btn = document.getElementById('btnRef');
     btn.innerHTML = "🔄 ĐANG TẢI..."; btn.disabled = true;
     try {
-        // TẠM THỜI GIẢ ĐỊNH BẠN ĐANG ĐIỂM DANH LỚP CÓ TÊN SHEET LÀ Danh_Sach_Lop
-        // Nếu có menu chọn lớp, cần gửi thêm biến classId vào đây nhé
-        const res = await fetch(scriptURL + "?action=getStats&classId=Danh_Sach_Lop");
+        // Gửi classId thực tế lên Google Apps Script
+        const res = await fetch(`${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}`);
         const data = await res.json();
         
         document.getElementById('total-present').innerText = data.total || 0;
@@ -126,6 +154,7 @@ function exportToExcel() {
         return;
     }
 
+    const classId = document.getElementById('class-select').value || "Chung";
     let csvContent = "MSSV,HỌ VÀ TÊN,THỜI GIAN ĐIỂM DANH\n";
 
     currentDataList.forEach(item => {
@@ -139,7 +168,7 @@ function exportToExcel() {
     link.setAttribute("href", url);
     
     const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
-    link.setAttribute("download", `DiemDanh_UTC2_${dateStr}.csv`);
+    link.setAttribute("download", `DiemDanh_${classId}_${dateStr}.csv`); // Tên file có kèm tên lớp
     
     document.body.appendChild(link);
     link.click();
