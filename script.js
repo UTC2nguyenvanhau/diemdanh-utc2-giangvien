@@ -1,228 +1,155 @@
-// Thay Link Apps Script của bạn vào đây
+// ==========================================
+// CẤU HÌNH HỆ THỐNG
+// ==========================================
+// Đảm bảo link này CÙNG LÀ MỘT LINK với Web Sinh Viên (Apps Script V3.0)
 const scriptURL = 'https://script.google.com/macros/s/AKfycbzyP5uGhs3iLrFUDWw12SCnogsizy18HBFmdlVh47n-fbQHHk5yxqpAfTD5DY8llPxj/exec'; 
-let currentDataList = [];
 
-function getStoredPass() { return localStorage.getItem('admin_password') || '123456'; }
+let currentDataList = []; // Biến lưu trữ dữ liệu tạm để xuất file Excel
 
-function initTheme() {
-    const isDark = localStorage.getItem('admin_theme') === 'dark-mode';
-    if (isDark) {
-        document.body.classList.add('dark-mode');
-        document.getElementById('checkbox-login').checked = true;
-        document.getElementById('checkbox-dash').checked = true;
-    }
-}
-initTheme();
+// Khởi chạy ngay khi Giảng viên mở web
+window.onload = () => {
+    loadClasses();
+};
 
-function toggleTheme(element) {
-    const isChecked = element.checked;
-    document.body.classList.toggle('dark-mode', isChecked);
-    localStorage.setItem('admin_theme', isChecked ? 'dark-mode' : 'light-mode');
-    document.getElementById('checkbox-login').checked = isChecked;
-    document.getElementById('checkbox-dash').checked = isChecked;
-}
-
-// Bắt sự kiện phím Enter
-document.getElementById("login-pass").addEventListener("keypress", function(event) {
-    if (event.key === "Enter") { event.preventDefault(); checkLogin(); }
-});
-document.getElementById("new-pass").addEventListener("keypress", function(event) {
-    if (event.key === "Enter") { event.preventDefault(); updatePassword(); }
-});
-document.getElementById("search-mssv").addEventListener("keypress", function(event) {
-    if (event.key === "Enter") { event.preventDefault(); searchStudent(); }
-});
-
-function checkLogin() {
-    if (document.getElementById('login-pass').value === getStoredPass()) {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        loadClasses(); 
-    } else { alert("Sai mật khẩu!"); }
-}
-
-function showPassModal() { document.getElementById('password-modal').style.display = 'flex'; }
-function closePassModal() { document.getElementById('password-modal').style.display = 'none'; }
-
-function updatePassword() {
-    const oldP = document.getElementById('old-pass').value;
-    const newP = document.getElementById('new-pass').value;
-    if (oldP !== getStoredPass()) { alert("Mật khẩu hiện tại không đúng!"); return; }
-    if (newP.length < 4) { alert("Mật khẩu mới quá ngắn!"); return; }
-    localStorage.setItem('admin_password', newP);
-    alert("Đã đổi mật khẩu thành công!");
-    document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = '';
-    closePassModal();
-}
-
-function showSearchModal() { 
-    document.getElementById('search-modal').style.display = 'flex'; 
-    document.getElementById('search-result').style.display = 'none';
-    document.getElementById('search-mssv').value = '';
-}
-function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; }
-
-async function searchStudent() {
-    const mssv = document.getElementById('search-mssv').value.trim();
-    if (!mssv) return alert("Vui lòng nhập MSSV!");
-
-    const btn = document.getElementById('btnSearch');
-    btn.innerHTML = "ĐANG TÌM..."; btn.disabled = true;
-
-    try {
-        const res = await fetch(`${scriptURL}?action=searchStudent&mssv=${mssv}`);
-        const data = await res.json();
-
-        if (data.success) {
-            document.getElementById('res-mssv').innerText = data.mssv;
-            document.getElementById('res-name').innerText = data.name;
-            document.getElementById('res-pass').innerText = data.password;
-            document.getElementById('search-result').style.display = 'block';
-        } else {
-            alert(data.message);
-            document.getElementById('search-result').style.display = 'none';
-        }
-    } catch (e) {
-        alert("Lỗi kết nối mạng!");
-    } finally {
-        btn.innerHTML = "TÌM KIẾM"; btn.disabled = false;
-    }
-}
-
-// --- TẢI DANH SÁCH LỚP ---
+// ==========================================
+// 1. TẢI DANH SÁCH LỚP HỌC (CHUẨN JSON)
+// ==========================================
 async function loadClasses() {
     const select = document.getElementById('class-select');
+    select.innerHTML = '<option value="">⏳ Đang tải danh sách lớp...</option>';
+    
     try {
         const res = await fetch(`${scriptURL}?action=getClasses`);
         const data = await res.json();
         
         if (data.success && data.classes.length > 0) {
-            select.innerHTML = '<option value="">-- Chọn lớp học --</option>';
+            select.innerHTML = '<option value="">-- Chọn lớp học phần --</option>';
             data.classes.forEach(cls => {
-                let opt = document.createElement('option');
-                opt.value = cls;
-                opt.innerHTML = "📚 " + cls;
-                select.appendChild(opt);
+                select.innerHTML += `<option value="${cls}">📚 Lớp: ${cls}</option>`;
             });
+        } else {
+            select.innerHTML = '<option value="">Không có lớp nào trên hệ thống</option>';
         }
-    } catch (e) { select.innerHTML = '<option value="">Lỗi tải lớp</option>'; }
+    } catch (e) {
+        select.innerHTML = '<option value="">❌ Lỗi kết nối máy chủ</option>';
+        console.error(e);
+    }
 }
 
-// --- TẢI DANH SÁCH NGÀY THEO LỚP ---
-async function handleClassChange() {
+// ==========================================
+// 2. TẢI DANH SÁCH NGÀY ĐIỂM DANH (CHUẨN JSON)
+// ==========================================
+async function loadDates() {
     const classId = document.getElementById('class-select').value;
     const dateSelect = document.getElementById('date-select');
     
+    // Nếu chưa chọn lớp thì xóa trắng ô chọn ngày
     if (!classId) {
-        dateSelect.innerHTML = '<option value="">-- Ngày --</option>';
-        document.getElementById('attendance-list').innerHTML = "";
-        document.getElementById('total-present').innerText = "0";
+        dateSelect.innerHTML = '<option value="">-- Chọn ngày --</option>';
         return;
     }
 
-    dateSelect.innerHTML = '<option value="">Đang tải...</option>';
+    dateSelect.innerHTML = '<option value="">⏳ Đang tải ngày...</option>';
     try {
         const res = await fetch(`${scriptURL}?action=getDates&classId=${encodeURIComponent(classId)}`);
         const data = await res.json();
-        
+
         if (data.success && data.dates.length > 0) {
-            dateSelect.innerHTML = '';
-            data.dates.forEach(date => {
-                let opt = document.createElement('option');
-                opt.value = date;
-                opt.innerHTML = "Ngày " + date;
-                dateSelect.appendChild(opt);
+            dateSelect.innerHTML = '<option value="">-- Chọn ngày --</option>';
+            // Đảo ngược mảng để ngày mới nhất (hôm nay) đẩy lên trên cùng
+            data.dates.reverse().forEach(date => {
+                dateSelect.innerHTML += `<option value="${date}">Ngày ${date}</option>`;
             });
-            
-            // Chọn ngày mới nhất và hiển thị dữ liệu
-            dateSelect.selectedIndex = data.dates.length - 1;
-            refreshData();
         } else {
-            dateSelect.innerHTML = '<option value="">Chưa có dữ liệu</option>';
-            refreshData(); 
-        }
-    } catch (e) { dateSelect.innerHTML = '<option value="">Lỗi</option>'; }
-}
-
-// --- TẢI DỮ LIỆU ĐIỂM DANH ---
-async function refreshData() {
-    const classId = document.getElementById('class-select').value;
-    const targetDate = document.getElementById('date-select').value;
-    
-    if (!classId) return;
-
-    const btn = document.getElementById('btnRef');
-    btn.innerHTML = "🔄 ĐANG TẢI..."; btn.disabled = true;
-    try {
-        let url = `${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}`;
-        if (targetDate && targetDate !== "") {
-            url += `&date=${encodeURIComponent(targetDate.replace("Ngày ", ""))}`;
-        }
-
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        document.getElementById('total-present').innerText = data.total || 0;
-        currentDataList = (data.list || []).reverse(); 
-        
-        const list = document.getElementById('attendance-list');
-        list.innerHTML = "";
-        
-        if(currentDataList.length === 0) {
-            list.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-gray); padding: 20px;">Chưa có sinh viên điểm danh ngày này</td></tr>`;
-        } else {
-            currentDataList.forEach(item => {
-                list.innerHTML += `
-                    <tr>
-                        <td>${item.mssv}</td>
-                        <td style="font-weight:700;">${item.name}</td>
-                        <td style="color:var(--text-gray);">${item.time}</td>
-                    </tr>`;
-            });
+            dateSelect.innerHTML = '<option value="">Chưa có dữ liệu điểm danh</option>';
         }
     } catch (e) { 
-        alert("Lỗi tải dữ liệu!"); 
-    } finally { 
-        btn.innerHTML = "🔄 LÀM MỚI"; 
-        btn.disabled = false; 
+        dateSelect.innerHTML = '<option value="">❌ Lỗi tải ngày</option>'; 
+        console.error(e);
     }
 }
 
+// ==========================================
+// 3. XEM THỐNG KÊ SINH VIÊN (CHUẨN JSON)
+// ==========================================
+async function loadStats() {
+    const classId = document.getElementById('class-select').value;
+    const dateStr = document.getElementById('date-select').value;
+    const tableBody = document.getElementById('table-body'); 
+    const totalElement = document.getElementById('total-count');
+
+    if (!classId || !dateStr) {
+        alert("⚠️ Vui lòng chọn đầy đủ Lớp và Ngày!");
+        return;
+    }
+
+    tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">⏳ Đang tải dữ liệu từ Google Sheets...</td></tr>';
+    if (totalElement) totalElement.innerText = "Đang tính...";
+    
+    try {
+        const res = await fetch(`${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(dateStr)}`);
+        const data = await res.json();
+
+        currentDataList = data.list; // Lưu vào biến toàn cục để chút nữa xuất Excel
+        
+        if (totalElement) totalElement.innerText = `Tổng số: ${data.total} sinh viên`;
+
+        if (data.total > 0) {
+            tableBody.innerHTML = '';
+            data.list.forEach((student, index) => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td style="text-align: center; font-weight: bold;">${student.mssv}</td>
+                        <td>${student.name}</td>
+                        <td style="text-align: center;">${student.time}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: red;">Không có sinh viên nào điểm danh trong ngày này.</td></tr>';
+        }
+    } catch (e) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">❌ Lỗi mạng: Không thể kết nối đến máy chủ.</td></tr>';
+        console.error(e);
+    }
+}
+
+// ==========================================
+// 4. XUẤT FILE EXCEL XỊN (.xlsx) BẰNG THƯ VIỆN SHEETJS
+// ==========================================
 function exportToExcel() {
     if (currentDataList.length === 0) {
-        alert("Chưa có dữ liệu sinh viên nào để xuất!");
+        alert("⚠️ Chưa có dữ liệu! Vui lòng chọn Lớp, chọn Ngày và bấm 'Xem thống kê' trước khi xuất file.");
         return;
     }
 
     const classId = document.getElementById('class-select').value || "Chung";
     const dateStrFilter = document.getElementById('date-select').value.replace("Ngày ", "").replace(/\//g, '-') || "All";
 
-    // 1. Chuẩn bị dữ liệu: Thêm hàng tiêu đề vào đầu mảng
+    // 1. Khởi tạo mảng và thêm hàng Tiêu đề
     const dataForExcel = [
-        ["MÃ SỐ SINH VIÊN", "HỌ VÀ TÊN", "THỜI GIAN ĐIỂM DANH"] // Tiêu đề cột
+        ["MÃ SỐ SINH VIÊN", "HỌ VÀ TÊN", "THỜI GIAN ĐIỂM DANH"] 
     ];
 
-    // 2. Đẩy dữ liệu từ danh sách hiện tại vào mảng
+    // 2. Đẩy dữ liệu sinh viên vào mảng
     currentDataList.forEach(item => {
         dataForExcel.push([item.mssv, item.name, item.time]);
     });
 
-    // 3. Khởi tạo Workbook và Worksheet
+    // 3. Khởi tạo Workbook của Excel
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(dataForExcel);
 
-    // 4. Cấu hình độ rộng cột (Cột A: 20, Cột B: 30, Cột C: 25)
+    // 4. Cấu hình độ rộng cột cho chuyên nghiệp
     const wscols = [
-        {wch: 20}, // MSSV
-        {wch: 35}, // Họ và Tên
-        {wch: 25}  // Thời gian
+        {wch: 20}, // Cột MSSV rộng 20
+        {wch: 35}, // Cột Tên rộng 35
+        {wch: 25}  // Cột Thời gian rộng 25
     ];
     ws['!cols'] = wscols;
 
-    // 5. Thêm Sheet vào file
+    // 5. Đóng gói và tải xuống
     XLSX.utils.book_append_sheet(wb, ws, "Danh Sách Điểm Danh");
-
-    // 6. Xuất file và tải xuống
     const fileName = `DiemDanh_${classId}_${dateStrFilter}.xlsx`;
     XLSX.writeFile(wb, fileName);
 }
