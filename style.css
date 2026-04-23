@@ -32,6 +32,10 @@ body {
     background: var(--card-color); padding: 40px 30px; border-radius: 30px;
     box-shadow: var(--dark-shadow), var(--light-shadow); width: 100%; max-width: 600px;
     text-align: center; position: relative; box-sizing: border-box; transition: all 0.4s ease;
+    /* [ĐÃ FIX LỖI VỠ GIAO DIỆN] Ép nội dung bên trong luôn xếp dọc khi JS gọi display='flex' */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .modal-card { max-width: 400px; }
 
@@ -57,6 +61,7 @@ h1 { font-size: 20px; font-weight: 900; margin: 10px 0; color: var(--primary-col
 .stat-box { 
     background: var(--input-bg); padding: 25px 20px; border-radius: 25px; margin: 20px 0; 
     box-shadow: var(--inset-dark), var(--inset-light); transition: all 0.4s ease;
+    width: 100%; /* Đảm bảo ô thống kê trải dài 100% */
 }
 .stat-box span { font-size: 42px; font-weight: 900; color: var(--accent-color); display: block; margin-bottom: 5px; }
 .stat-label { font-weight: 800; font-size: 13px; color: var(--text-gray); letter-spacing: 1px; }
@@ -71,12 +76,17 @@ th { text-align: left; color: var(--text-gray); padding: 12px 10px; border-botto
 td { text-align: left; padding: 15px 10px; border-bottom: 1px solid var(--input-border); color: var(--primary-color); font-weight: 500; }
 td:nth-child(2) { font-weight: 700; } 
 
-.button-group { display: flex; gap: 15px; margin-top: 15px; justify-content: center; }
+/* [ĐÃ FIX LỖI NÚT BỊ DÍNH] */
+.button-group { 
+    display: flex; gap: 15px; margin-top: 15px; justify-content: center; 
+    width: 100%; /* Trải dài để chia đều không gian cho các nút */
+}
 .btn {
     -webkit-appearance: none; appearance: none;
     background: linear-gradient(135deg, #66b3ff 0%, #0073e6 100%); color: white; border: none; padding: 15px;
     width: 100%; border-radius: 15px; font-weight: 900; font-size: 14px; cursor: pointer; transition: all 0.3s ease;
     box-shadow: 5px 5px 12px rgba(0, 115, 230, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex: 1; /* Chia đều kích thước các nút bấm trong một hàng */
 }
 .btn-excel { background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 5px 5px 12px rgba(39, 174, 96, 0.2); }
 .btn:active { transform: scale(0.96); box-shadow: none; }
@@ -104,5 +114,6 @@ select.input-field { font-size: 14px; padding: 0 10px; }
 .search-result-box {
     background: var(--input-bg); padding: 15px 20px; border-radius: 15px; margin-top: 15px; margin-bottom: 15px;
     box-shadow: var(--inset-dark), var(--inset-light); text-align: left;
+    width: 100%; box-sizing: border-box;
 }
 .search-result-box p { margin: 8px 0; font-size: 14px; font-weight: 500; color: var(--text-gray); }
