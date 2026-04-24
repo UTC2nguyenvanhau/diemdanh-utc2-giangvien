@@ -22,7 +22,20 @@ async function fetchWithRetry(url, retries = 3, timeoutMs = 7000) {
         }
     }
 }
-
+async function forceSyncData() {
+    if(!confirm("Bạn vừa sửa dữ liệu trực tiếp trên Sheet? Hãy bấm OK để hệ thống cập nhật mật khẩu mới.")) return;
+    
+    try {
+        const res = await fetch(`${scriptURL}?action=clearCache`);
+        const data = await res.json();
+        if(data.success) {
+            alert("✅ " + data.message);
+            window.location.reload();
+        }
+    } catch (e) {
+        alert("❌ Lỗi kết nối máy chủ!");
+    }
+}
 // ==========================================
 // 1. QUẢN LÝ GIAO DIỆN (DARK MODE)
 // ==========================================
