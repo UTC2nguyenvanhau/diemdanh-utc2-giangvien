@@ -22,6 +22,10 @@ async function fetchWithRetry(url, retries = 3, timeoutMs = 7000) {
         }
     }
 }
+
+// ==========================================
+// 1. QUẢN LÝ GIAO DIỆN (DARK MODE)
+// ==========================================
 async function forceSyncData() {
     if(!confirm("Bạn vừa sửa dữ liệu trực tiếp trên Sheet? Hãy bấm OK để hệ thống cập nhật mật khẩu mới.")) return;
     
@@ -36,9 +40,6 @@ async function forceSyncData() {
         alert("❌ Lỗi kết nối máy chủ!");
     }
 }
-// ==========================================
-// 1. QUẢN LÝ GIAO DIỆN (DARK MODE)
-// ==========================================
 function toggleTheme(checkbox) {
     if(checkbox.checked) {
         document.body.classList.add('dark-mode');
