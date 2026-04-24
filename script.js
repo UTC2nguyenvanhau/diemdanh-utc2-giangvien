@@ -5,6 +5,25 @@ const scriptURL = 'https://script.google.com/macros/s/AKfycbyOy0tHt992Bui7MYsudz
 let currentDataList = []; 
 
 // ==========================================
+// CÔNG CỤ: TỰ ĐỘNG THỬ LẠI KHI MẠNG YẾU (AUTO-RETRY)
+// ==========================================
+async function fetchWithRetry(url, retries = 3, timeoutMs = 7000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeoutMs);
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(id);
+            if (!response.ok) throw new Error("Lỗi HTTP");
+            return await response.json(); 
+        } catch (err) {
+            if (i === retries - 1) throw err; 
+            await new Promise(r => setTimeout(r, 1500)); // Đợi 1.5s rồi thử lại
+        }
+    }
+}
+
+// ==========================================
 // 1. QUẢN LÝ GIAO DIỆN (DARK MODE)
 // ==========================================
 function toggleTheme(checkbox) {
@@ -15,7 +34,6 @@ function toggleTheme(checkbox) {
         document.body.classList.remove('dark-mode');
         localStorage.setItem('admin_theme', 'light'); 
     }
-    // Đồng bộ 2 nút gạt ở màn hình login và dashboard
     const chkLogin = document.getElementById('checkbox-login');
     const chkDash = document.getElementById('checkbox-dash');
     if (chkLogin) chkLogin.checked = checkbox.checked;
@@ -38,17 +56,16 @@ function applySavedTheme() {
 // ==========================================
 window.onload = () => {
     applySavedTheme();
-    // Nếu đã đăng nhập trước đó thì vào thẳng Dashboard
     if (localStorage.getItem('admin_logged_in') === 'true') {
         document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'flex'; // Dùng flex để giao diện không bị lệch
+        document.getElementById('dashboard').style.display = 'flex'; 
         loadClasses();
     }
 };
 
 function checkLogin() {
     const pass = document.getElementById('login-pass').value;
-    const currentPass = localStorage.getItem('admin_password') || 'admin123'; // Mật khẩu mặc định là admin123
+    const currentPass = localStorage.getItem('admin_password') || 'admin123'; 
     
     if (pass === currentPass) {
         localStorage.setItem('admin_logged_in', 'true');
@@ -61,14 +78,13 @@ function checkLogin() {
 }
 
 // ==========================================
-// 3. TẢI DỮ LIỆU TỪ GOOGLE SHEETS (JSON)
+// 3. TẢI DỮ LIỆU TỪ GOOGLE SHEETS (JSON + RETRY)
 // ==========================================
 async function loadClasses() {
     const select = document.getElementById('class-select');
     select.innerHTML = '<option value="">⏳ Đang tải lớp...</option>';
     try {
-        const res = await fetch(`${scriptURL}?action=getClasses`);
-        const data = await res.json();
+        const data = await fetchWithRetry(`${scriptURL}?action=getClasses`);
         if (data.success && data.classes.length > 0) {
             select.innerHTML = '<option value="">-- Chọn lớp học phần --</option>';
             data.classes.forEach(cls => {
@@ -95,8 +111,7 @@ async function loadDates() {
     }
     dateSelect.innerHTML = '<option value="">⏳ Đang tải ngày...</option>';
     try {
-        const res = await fetch(`${scriptURL}?action=getDates&classId=${encodeURIComponent(classId)}`);
-        const data = await res.json();
+        const data = await fetchWithRetry(`${scriptURL}?action=getDates&classId=${encodeURIComponent(classId)}`);
         if (data.success && data.dates.length > 0) {
             dateSelect.innerHTML = '<option value="">-- Chọn ngày --</option>';
             data.dates.reverse().forEach(date => {
@@ -133,8 +148,7 @@ async function loadStats() {
     btnRef.disabled = true;
     
     try {
-        const res = await fetch(`${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(dateStr)}`);
-        const data = await res.json();
+        const data = await fetchWithRetry(`${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(dateStr)}`);
 
         currentDataList = data.list; 
         totalElement.innerText = data.total;
@@ -154,7 +168,7 @@ async function loadStats() {
             tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--error);">Không có sinh viên nào điểm danh.</td></tr>';
         }
     } catch (e) {
-        tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--error);">❌ Lỗi kết nối máy chủ.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--error);">❌ Lỗi kết nối, vui lòng thử lại.</td></tr>';
     } finally {
         btnRef.innerText = "🔄 LÀM MỚI";
         btnRef.disabled = false;
@@ -181,8 +195,7 @@ async function searchStudent() {
     btnSearch.disabled = true;
 
     try {
-        const res = await fetch(`${scriptURL}?action=searchStudent&mssv=${mssv}`);
-        const data = await res.json();
+        const data = await fetchWithRetry(`${scriptURL}?action=searchStudent&mssv=${mssv}`);
         if (data.success) {
             document.getElementById('res-mssv').innerText = data.mssv;
             document.getElementById('res-name').innerText = data.name;
@@ -193,7 +206,7 @@ async function searchStudent() {
             resultBox.style.display = 'none';
         }
     } catch(e) {
-        alert('❌ Lỗi mạng!');
+        alert('❌ Lỗi mạng! Đã thử 3 lần nhưng không thành công.');
     } finally {
         btnSearch.innerText = "TÌM KIẾM";
         btnSearch.disabled = false;
