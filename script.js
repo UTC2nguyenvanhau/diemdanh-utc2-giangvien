@@ -1,7 +1,7 @@
 // ==========================================
 // CẤU HÌNH HỆ THỐNG
 // ==========================================
-const scriptURL = 'https://script.google.com/macros/s/AKfycbyzBI6xN3rJjl0mV3Z7ney2mstqLUbnu3EZCmCpEGChfy4RxuxYWV9d7tf1CO6lFwp4/exec'; 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyOy0tHt992Bui7MYsudz8cAD_trRHurzVtamLSjLHO--EJ2PKIZwnh3qlciW1iSjd0/exec'; 
 let currentDataList = []; 
 
 // ==========================================
