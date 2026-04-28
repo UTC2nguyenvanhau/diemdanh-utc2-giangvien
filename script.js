@@ -1,117 +1,40 @@
-const scriptURL = 'https://script.google.com/macros/s/AKfycbwi-MDO-wehI0SNdkVqaW_gDLpCkPrDKToIQhLs3qkXcLUjNtJFriKGaQF6lXAzdJ7R/exec'; 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbytXOd7q3oxAArpRvJOfQGz4TtXz1JPljLEVdSwMl3nPBG_GbAAU4cFrQ0li3g9sZIA/exec'; 
 let currentDataList = []; 
 
-function toggleTheme(checkbox) {
-    if(checkbox.checked) { document.body.classList.add('dark-mode'); localStorage.setItem('admin_theme', 'dark'); } 
-    else { document.body.classList.remove('dark-mode'); localStorage.setItem('admin_theme', 'light'); }
-    ['checkbox-login', 'checkbox-dash'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = checkbox.checked; });
-}
+function toggleTheme(cb) { if(cb.checked) { document.body.classList.add('dark-mode'); localStorage.setItem('admin_theme', 'dark'); } else { document.body.classList.remove('dark-mode'); localStorage.setItem('admin_theme', 'light'); } ['checkbox-login', 'checkbox-dash'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = cb.checked; }); }
+function applySavedTheme() { if (localStorage.getItem('admin_theme') === 'dark') { document.body.classList.add('dark-mode'); ['checkbox-login', 'checkbox-dash'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = true; }); } }
+window.onload = () => { applySavedTheme(); if (localStorage.getItem('admin_logged_in') === 'true') { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('dashboard').style.display = 'flex'; loadClasses(); } };
 
-function applySavedTheme() {
-    if (localStorage.getItem('admin_theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        ['checkbox-login', 'checkbox-dash'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = true; });
-    }
-}
-
-window.onload = () => {
-    applySavedTheme();
-    if (localStorage.getItem('admin_logged_in') === 'true') {
-        document.getElementById('login-overlay').style.display = 'none'; document.getElementById('dashboard').style.display = 'flex'; loadClasses();
-    }
-};
-
-function checkLogin() {
-    const pass = document.getElementById('login-pass').value; const currentPass = localStorage.getItem('admin_password') || 'admin123'; 
-    if (pass === currentPass) { localStorage.setItem('admin_logged_in', 'true'); document.getElementById('login-overlay').style.display = 'none'; document.getElementById('dashboard').style.display = 'flex'; loadClasses(); } 
-    else { alert('❌ Sai mật khẩu quản lý!'); }
-}
+function checkLogin() { const pass = document.getElementById('login-pass').value; if (pass === (localStorage.getItem('admin_password') || 'admin123')) { localStorage.setItem('admin_logged_in', 'true'); window.location.reload(); } else alert('❌ Sai mật khẩu!'); }
 
 async function loadClasses() {
-    const select = document.getElementById('class-select'); select.innerHTML = '<option value="">⏳ Đang tải lớp...</option>';
-    try {
-        const res = await fetch(`${scriptURL}?action=getClasses`);
-        const data = await res.json();
-        if (data.success && data.classes.length > 0) { 
-            select.innerHTML = '<option value="">-- Chọn lớp học phần --</option>'; 
-            data.classes.forEach(cls => { select.innerHTML += `<option value="${cls}">📚 Lớp: ${cls}</option>`; }); 
-        } else { select.innerHTML = '<option value="">Không có lớp nào</option>'; }
-    } catch (e) { select.innerHTML = '<option value="">❌ Lỗi mạng</option>'; }
+    const sel = document.getElementById('class-select'); sel.innerHTML = '<option>⏳ Tải lớp...</option>';
+    try { const res = await fetch(`${scriptURL}?action=getClasses`); const data = await res.json(); if (data.success) { sel.innerHTML = '<option value="">-- Chọn lớp --</option>'; data.classes.forEach(c => sel.innerHTML += `<option value="${c}">📚 Lớp: ${c}</option>`); } } catch (e) { sel.innerHTML = '<option>❌ Lỗi</option>'; }
 }
-
-function handleClassChange() { loadDates(); }
 
 async function loadDates() {
-    const classId = document.getElementById('class-select').value; const dateSelect = document.getElementById('date-select');
-    if (!classId) { dateSelect.innerHTML = '<option value="">-- Chọn ngày --</option>'; return; }
-    dateSelect.innerHTML = '<option value="">⏳ Đang tải ngày...</option>';
-    try {
-        const res = await fetch(`${scriptURL}?action=getDates&classId=${encodeURIComponent(classId)}`);
-        const data = await res.json();
-        if (data.success && data.dates.length > 0) { 
-            dateSelect.innerHTML = '<option value="">-- Chọn ngày --</option>'; 
-            data.dates.reverse().forEach(date => { dateSelect.innerHTML += `<option value="${date}">Ngày ${date}</option>`; }); 
-        } else { dateSelect.innerHTML = '<option value="">Chưa có dữ liệu</option>'; }
-    } catch (e) { dateSelect.innerHTML = '<option value="">❌ Lỗi tải ngày</option>'; }
+    const cid = document.getElementById('class-select').value; const sel = document.getElementById('date-select'); if (!cid) return; sel.innerHTML = '<option>⏳ Tải ngày...</option>';
+    try { const res = await fetch(`${scriptURL}?action=getDates&classId=${encodeURIComponent(cid)}`); const data = await res.json(); if (data.success) { sel.innerHTML = '<option value="">-- Chọn ngày --</option>'; data.dates.reverse().forEach(d => sel.innerHTML += `<option value="${d}">Ngày ${d}</option>`); } } catch (e) { sel.innerHTML = '<option>❌ Lỗi</option>'; }
 }
-
+function handleClassChange() { loadDates(); }
 function refreshData() { loadStats(); }
 
 async function loadStats() {
-    const classId = document.getElementById('class-select').value; const dateStr = document.getElementById('date-select').value;
-    const tableBody = document.getElementById('attendance-list'); const totalElement = document.getElementById('total-present'); const btnRef = document.getElementById('btnRef');
-    if (!classId || !dateStr) { tableBody.innerHTML = ''; totalElement.innerText = "0"; return; }
-    tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">⏳ Đang tải...</td></tr>'; totalElement.innerText = "..."; btnRef.innerText = "⏳ ĐANG LẤY..."; btnRef.disabled = true;
-    
+    const cid = document.getElementById('class-select').value; const date = document.getElementById('date-select').value; const tb = document.getElementById('attendance-list'); const tot = document.getElementById('total-present'); const btn = document.getElementById('btnRef');
+    if (!cid || !date) return; tb.innerHTML = '<tr><td colspan="3" align="center">⏳ Đang tải...</td></tr>'; btn.innerText = "⏳ LẤY..."; btn.disabled = true;
     try {
-        const res = await fetch(`${scriptURL}?action=getStats&classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(dateStr)}`);
-        const data = await res.json();
-        currentDataList = data.list; totalElement.innerText = data.total;
-        if (data.total > 0) { 
-            tableBody.innerHTML = ''; 
-            data.list.forEach(student => { tableBody.innerHTML += `<tr><td style="font-weight: bold; text-align:center;">${student.mssv}</td><td>${student.name}</td><td style="color: var(--accent-color); font-weight: bold; text-align: center;">${student.time}</td></tr>`; }); 
-        } else { tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--error);">Không có sinh viên nào điểm danh.</td></tr>'; }
-    } catch (e) { tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--error);">❌ Lỗi mạng, thử lại sau.</td></tr>'; } 
-    finally { btnRef.innerText = "🔄 LÀM MỚI"; btnRef.disabled = false; }
+        const res = await fetch(`${scriptURL}?action=getStats&classId=${encodeURIComponent(cid)}&date=${encodeURIComponent(date)}`); const data = await res.json(); currentDataList = data.list; tot.innerText = data.total;
+        if (data.total > 0) { tb.innerHTML = ''; data.list.forEach(s => tb.innerHTML += `<tr><td style="font-weight:bold;">${s.mssv}</td><td>${s.name}</td><td style="color:var(--accent-color); font-weight:bold;" align="center">${s.time}</td></tr>`); } else tb.innerHTML = '<tr><td colspan="3" align="center" style="color:red;">Không có DL</td></tr>';
+    } catch (e) { tb.innerHTML = '<tr><td colspan="3" align="center" style="color:red;">❌ Lỗi mạng</td></tr>'; } finally { btn.innerText = "🔄 LÀM MỚI"; btn.disabled = false; }
 }
 
 function showSearchModal() { document.getElementById('search-modal').style.display = 'flex'; }
-function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; document.getElementById('search-result').style.display = 'none'; document.getElementById('search-mssv').value = ''; }
-
-async function searchStudent() {
-    const mssv = document.getElementById('search-mssv').value.trim(); const btnSearch = document.getElementById('btnSearch'); const resultBox = document.getElementById('search-result');
-    if (!mssv) return alert('⚠️ Vui lòng nhập MSSV!'); btnSearch.innerText = "ĐANG TÌM..."; btnSearch.disabled = true;
-    try {
-        const res = await fetch(`${scriptURL}?action=searchStudent&mssv=${mssv}`);
-        const data = await res.json();
-        if (data.success) { 
-            document.getElementById('res-mssv').innerText = data.mssv; document.getElementById('res-name').innerText = data.name; document.getElementById('res-pass').innerText = data.password; resultBox.style.display = 'block'; 
-        } else { alert("❌ " + data.message); resultBox.style.display = 'none'; }
-    } catch(e) { alert('❌ Lỗi mạng!'); } finally { btnSearch.innerText = "TÌM KIẾM"; btnSearch.disabled = false; }
-}
+function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; document.getElementById('search-result').style.display = 'none'; }
+async function searchStudent() { const m = document.getElementById('search-mssv').value.trim(); const btn = document.getElementById('btnSearch'); const resB = document.getElementById('search-result'); if (!m) return; btn.innerText = "TÌM..."; btn.disabled = true; try { const res = await fetch(`${scriptURL}?action=searchStudent&mssv=${m}`); const data = await res.json(); if (data.success) { document.getElementById('res-mssv').innerText = data.mssv; document.getElementById('res-name').innerText = data.name; document.getElementById('res-pass').innerText = data.password; resB.style.display = 'block'; } else alert("❌ Lỗi"); } catch(e) {} finally { btn.innerText = "TÌM KIẾM"; btn.disabled = false; } }
 
 function showPassModal() { document.getElementById('password-modal').style.display = 'flex'; }
-function closePassModal() { document.getElementById('password-modal').style.display = 'none'; document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = ''; }
-function updatePassword() {
-    const oldPass = document.getElementById('old-pass').value; const newPass = document.getElementById('new-pass').value; const currentPass = localStorage.getItem('admin_password') || 'admin123';
-    if (oldPass !== currentPass) return alert('❌ Mật khẩu hiện tại không đúng!'); if (newPass.length < 6) return alert('⚠️ Mật khẩu mới phải từ 6 ký tự!');
-    localStorage.setItem('admin_password', newPass); alert('✅ Đổi mật khẩu thành công!'); closePassModal();
-}
+function closePassModal() { document.getElementById('password-modal').style.display = 'none'; }
+function updatePassword() { const op = document.getElementById('old-pass').value; const np = document.getElementById('new-pass').value; if (op !== (localStorage.getItem('admin_password') || 'admin123')) return alert('❌ Mật khẩu cũ sai!'); if (np.length < 6) return alert('⚠️ Quá ngắn!'); localStorage.setItem('admin_password', np); alert('✅ Đã lưu!'); closePassModal(); }
 
-async function forceSyncData() {
-    if(!confirm("Bạn vừa sửa dữ liệu trực tiếp trên Sheet? Hãy bấm OK để hệ thống cập nhật mới.")) return;
-    try {
-        const res = await fetch(`${scriptURL}?action=clearCache`);
-        const data = await res.json();
-        if(data.success) { alert("✅ " + data.message); window.location.reload(); }
-    } catch (e) { alert("❌ Lỗi mạng!"); }
-}
-
-function exportToExcel() {
-    if (currentDataList.length === 0) return alert("⚠️ Chưa có dữ liệu điểm danh!");
-    const classId = document.getElementById('class-select').value; const dateStr = document.getElementById('date-select').value.replace(/\//g, '-');
-    const dataForExcel = [["MÃ SỐ SINH VIÊN", "HỌ VÀ TÊN", "THỜI GIAN ĐIỂM DANH"]];
-    currentDataList.forEach(item => { dataForExcel.push([item.mssv, item.name, item.time]); });
-    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(dataForExcel); ws['!cols'] = [{wch: 20}, {wch: 35}, {wch: 25}];
-    XLSX.utils.book_append_sheet(wb, ws, "Danh Sách"); XLSX.writeFile(wb, `DiemDanh_${classId}_Ngày_${dateStr}.xlsx`);
-}
+async function forceSyncData() { if(!confirm("Đồng bộ Cache với Google Sheets?")) return; try { const res = await fetch(`${scriptURL}?action=clearCache`); const data = await res.json(); if(data.success) { alert("✅ " + data.message); window.location.reload(); } } catch (e) { alert("❌ Lỗi!"); } }
+function exportToExcel() { if (!currentDataList.length) return alert("⚠️ Trống!"); const cid = document.getElementById('class-select').value; const ds = document.getElementById('date-select').value.replace(/\//g, '-'); const d = [["MSSV", "HỌ TÊN", "THỜI GIAN"]]; currentDataList.forEach(i => d.push([i.mssv, i.name, i.time])); const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(d); ws['!cols'] = [{wch:15}, {wch:35}, {wch:20}]; XLSX.utils.book_append_sheet(wb, ws, "DL"); XLSX.writeFile(wb, `DD_${cid}_${ds}.xlsx`); }
